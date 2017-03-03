@@ -1,7 +1,7 @@
 package com.cppba;
 
 
-import com.cppba.core.Util.JwtUtil;
+import com.cppba.core.util.JwtUtil;
 import com.cppba.core.bean.UserJwt;
 
 public class Test {

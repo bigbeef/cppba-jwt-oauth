@@ -1,9 +1,11 @@
 package com.cppba.core.interceptor;
 
 
-import com.cppba.core.Util.JwtUtil;
+import com.cppba.core.util.CommonUtil;
+import com.cppba.core.util.JwtUtil;
 import com.cppba.core.annotation.RequiresRoles;
 import com.cppba.core.bean.UserJwt;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -27,9 +29,22 @@ public class OauthInterceptor implements HandlerInterceptor {
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         Method method = handlerMethod.getMethod();
 
+        //该controller的角色权限注解
+        RequiresRoles annotation = method.getAnnotation(RequiresRoles.class);
+        //如果不需要权限验证的controller
+        if(annotation == null){
+            return true;
+        }
+
         //获取客户的传来的token,此处可以根据前后端约定自定义怎么获取token
-        String token = (String) request.getParameter("token");
+        String token = CommonUtil.getCookie("token", request);
         System.out.println("token:"+token);
+
+        //没有token
+        if(StringUtils.isBlank(token)){
+            toUnauthorized(response);
+            return false;
+        }
 
         //验证token签名是否合法
         boolean verify = JwtUtil.verify(token);
@@ -46,18 +61,25 @@ public class OauthInterceptor implements HandlerInterceptor {
         List<String> rolesList = Arrays.asList(roles);
 
         //是否包含角色权限注解
-        RequiresRoles annotation = method.getAnnotation(RequiresRoles.class);
         if(annotation!=null){
             String[] needRoles = annotation.value();
             List<String> needRoleList = Arrays.asList(needRoles);
             System.out.println("needRoles:"+ needRoleList.toString());
             //需要的权限该用户是否都包含
             for(String needRole : needRoleList){
+                if(StringUtils.isBlank(needRole)){
+                    continue;
+                }
                 if(!rolesList.contains(needRole)){
                     toUnauthorized(response);
                    return false;
                 }
             }
+        }
+
+        String newToken = JwtUtil.newToken(token);
+        if(!StringUtils.equals(token,newToken)){
+            CommonUtil.setCookie("token",newToken,0,response);
         }
         return true;
     }
@@ -70,6 +92,7 @@ public class OauthInterceptor implements HandlerInterceptor {
 
     }
 
+    //返回未授权结果
     private void toUnauthorized(HttpServletResponse response){
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
     }

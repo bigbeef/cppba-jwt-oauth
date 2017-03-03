@@ -1,8 +1,9 @@
 package com.cppba.web;
 
-import com.cppba.core.Util.JwtUtil;
 import com.cppba.core.annotation.RequiresRoles;
 import com.cppba.core.bean.UserJwt;
+import com.cppba.core.util.CommonUtil;
+import com.cppba.core.util.JwtUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,7 +20,7 @@ public class TestController {
 
     @RequestMapping("/index")
     @ResponseBody
-    @RequiresRoles({"admin"})
+    @RequiresRoles({"admin","user"})
     public Object index(){
         UserJwt userJwt = new UserJwt();
         userJwt.setId(new Long(123));
@@ -41,8 +42,11 @@ public class TestController {
         userJwt.setId(new Long(123));
         userJwt.setUserName("jack");
         userJwt.setRoles(new String[]{"admin"});
-        String jwtString = JwtUtil.createJwt(userJwt);
-        map.put("token",jwtString);
+        String token = JwtUtil.createJwt(userJwt);
+
+        CommonUtil.setCookie("token",token,0,response);
+
+        map.put("token",token);
 
         return map;
     }
