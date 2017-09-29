@@ -2,7 +2,7 @@ package com.cppba.core.bean;
 
 import java.util.Arrays;
 
-public class UserJwt{
+public class JwtUser {
 
     private Long id;
 

@@ -1,10 +1,10 @@
 package com.cppba.core.interceptor;
 
 
-import com.cppba.core.util.CommonUtil;
-import com.cppba.core.util.JwtUtil;
+import com.cppba.core.util.CommonUtils;
+import com.cppba.core.util.JwtUtils;
 import com.cppba.core.annotation.RequiresRoles;
-import com.cppba.core.bean.UserJwt;
+import com.cppba.core.bean.JwtUser;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.method.HandlerMethod;
@@ -37,7 +37,7 @@ public class OauthInterceptor implements HandlerInterceptor {
         }
 
         //获取客户的传来的token,此处可以根据前后端约定自定义怎么获取token
-        String token = CommonUtil.getCookie("token", request);
+        String token = CommonUtils.getCookie("token", request);
         System.out.println("token:"+token);
 
         //没有token
@@ -47,7 +47,7 @@ public class OauthInterceptor implements HandlerInterceptor {
         }
 
         //验证token签名是否合法
-        boolean verify = JwtUtil.verify(token);
+        boolean verify = JwtUtils.verify(token);
         System.out.println("verify:"+verify);
         if(!verify){
             toUnauthorized(response);
@@ -55,7 +55,7 @@ public class OauthInterceptor implements HandlerInterceptor {
         }
 
         //解码用户信息
-        UserJwt userJwt = JwtUtil.decodeJwt(token);
+        JwtUser userJwt = JwtUtils.decodeJwt(token);
         System.out.println("userJwt:"+userJwt.toString());
         String[] roles = userJwt.getRoles();
         List<String> rolesList = Arrays.asList(roles);
@@ -77,9 +77,9 @@ public class OauthInterceptor implements HandlerInterceptor {
             }
         }
 
-        String newToken = JwtUtil.newToken(token);
+        String newToken = JwtUtils.newToken(token);
         if(!StringUtils.equals(token,newToken)){
-            CommonUtil.setCookie("token",newToken,0,response);
+            CommonUtils.setCookie("token",newToken,0,response);
         }
         return true;
     }
